@@ -1,7 +1,8 @@
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
+import { RedisCacheService } from '../redis-cache/redis-cache.service';
+
 
 describe('CategoriesController', () => {
   let controller: CategoriesController;
@@ -12,6 +13,10 @@ describe('CategoriesController', () => {
       providers: [
         {
           provide: CategoriesService,
+          useValue: {},
+        },
+        {
+          provide: RedisCacheService,
           useValue: {},
         },
       ],

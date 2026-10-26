@@ -13,6 +13,8 @@ import { currentUser } from '../auth/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface.js';
 import { AuditInterceptor } from '../audit/audit/audit.interceptor.js';
 import { AuditEvent } from '../audit/audit/audit.types.js';
+import { RedisCacheService } from '../redis-cache/redis-cache.service.js';
+import { RedisHttpCacheInterceptor } from '../redis-cache/redis-http-cache.interceptor.js';
 
 @ApiTags('Products')
 @ApiBearerAuth('JWT-auth')
@@ -21,7 +23,8 @@ export class ProductsController {
     private readonly logger = new Logger(ProductsController.name);
 
     constructor(
-        private readonly productsService : ProductsService
+        private readonly productsService : ProductsService,
+        private readonly redisCache : RedisCacheService
     ){}
 
     @Post('create')
@@ -61,6 +64,8 @@ export class ProductsController {
     createProductDto,
   );
 
+  await this.clearProductsCache()
+
   req.auditEvent = {
     userId: user.id,
     entityType: 'PRODUCT',
@@ -79,6 +84,7 @@ export class ProductsController {
   return product;
     }
 
+    @UseInterceptors(RedisHttpCacheInterceptor)
     @Get()
     @ApiOperation({
         summary: 'Get products',
@@ -99,7 +105,15 @@ export class ProductsController {
             user.role
             
         );
+
+        
     }
+
+    private async clearProductsCache(): Promise<void> {
+  await this.redisCache.deleteByPattern(
+    'oms:http-cache:*products*',
+  );
+}
 
     @Get('low-stock')
     @Roles(UserRole.Admin)
@@ -156,6 +170,8 @@ export class ProductsController {
             user.id
         );
 
+        await this.clearProductsCache()
+
     // 3. Prepare the audit event.
     req.auditEvent = {
         userId: user.id,
@@ -204,6 +220,8 @@ export class ProductsController {
 
   await this.productsService.removeProduct(id);
 
+  await this.clearProductsCache()
+
   req.auditEvent = {
     userId: user.id,
     entityType: 'PRODUCT',
@@ -234,13 +252,17 @@ export class ProductsController {
 @ApiResponse({ status: 401, description: 'Unauthorized' })
 @ApiResponse({ status: 403, description: 'Only ADMIN can adjust stock' })
 @ApiResponse({ status: 404, description: 'Product not found' })
-    adjustStock(
+ async adjustStock(
         @Param('id', ParseUUIDPipe) id :string,
         @Body() adjustStockDto : AdjustStockDto,
         @currentUser() user : AuthenticatedUser,
     ){
-        return this.productsService.adjustStock(id,adjustStockDto,
+        const result = await this.productsService.adjustStock(id,adjustStockDto,
             user
-        )
+        );
+
+        await this.clearProductsCache();
+
+        return result;
     }
 }

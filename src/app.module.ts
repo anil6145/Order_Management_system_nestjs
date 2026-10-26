@@ -22,6 +22,7 @@ import { AuditModule } from './audit/audit/audit.module.js';
 import { AuditInterceptor } from './audit/audit/audit.interceptor.js';
 import { HealthController } from './health/health.controller';
 import { HealthModule } from './health/health.module';
+import { RedisCacheModule } from './redis-cache/redis-cache.module.js';
 
 
 @Module({
@@ -63,6 +64,7 @@ import { HealthModule } from './health/health.module';
     CategoriesModule,
     ReportsModule,
     HealthModule,
+    RedisCacheModule,
   ],
   controllers: [AppController],
   providers: [AppService,
