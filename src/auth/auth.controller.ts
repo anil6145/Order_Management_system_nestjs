@@ -5,6 +5,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator.js';
 import { RefreshTokenDto } from '../refresh-tokens/dto/refresh-token.dto.js';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { ResponseMessage } from './decorators/response-message.decorator.js';
 
 
 @ApiTags('Authentication')
@@ -21,6 +22,7 @@ export class AuthController {
   @Public()
   @UseGuards(ThrottlerGuard)
   @Throttle({default : {limit : 5 , ttl : 60000}})
+  @ResponseMessage('User loggined successfully')
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -84,6 +86,7 @@ export class AuthController {
 
   @Public()
   @Post('logout')
+  @ResponseMessage('User loggout successfully')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Revoke refresh token (logout)',

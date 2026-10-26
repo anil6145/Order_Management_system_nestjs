@@ -180,8 +180,8 @@ if (oldPayload.sub !== (await newPayload).sub) {
         {
         tokenHash: oldTokenHash,
           userId: oldPayload.sub,
-          revoked_at: IsNull(),
-          expires_at: MoreThan(new Date()),
+          revokedAt: IsNull(),
+          expiresAt: MoreThan(new Date()),
         },
         {
           revokedAt: new Date(),

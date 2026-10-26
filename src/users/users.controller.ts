@@ -25,6 +25,7 @@ import { UserRole } from './enum/roles.enum.js';
 import { Public } from '../auth/decorators/public.decorator.js';
 import { ListQueryDto } from './dto/list-users-query.dto.js';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto.js';
+import { ResponseMessage } from '../auth/decorators/response-message.decorator.js';
 
 @ApiTags('Users')
 @Controller('users')
@@ -37,6 +38,7 @@ export class UsersController {
 
   @Public()
   @Post('register')
+  @ResponseMessage('User Registrated Successfully')
   @ApiOperation({
     summary: 'Register a new user',
   })
@@ -59,6 +61,7 @@ export class UsersController {
 
   @Get()
   @Roles(UserRole.Admin)
+  @ResponseMessage('Fetching all the users')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Get all users - Admin only',
@@ -106,6 +109,7 @@ export class UsersController {
 
   @Get(':id')
   @Roles(UserRole.Admin)
+  @ResponseMessage('User Retrieved by ID')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Get user profile by ID - Admin only',
@@ -148,6 +152,7 @@ export class UsersController {
 
   @Patch(':id/status')
   @Roles(UserRole.Admin)
+  @ResponseMessage('Update User Status')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update user status - Admin only',

@@ -424,7 +424,9 @@ async findAll(
 });
 
   // Cursor pagination uses created_at DESC ordering.
-  if ( paginationMode === 'cursor' ||!! cursor && (sortBy !== 'created_at' || sortOrder !== 'DESC')) {
+  if( 
+    ( paginationMode === 'cursor' ||!!cursor) && (sortBy !== 'created_at' || sortOrder !== 'DESC')
+  ) {
     throw new BadRequestException(
       'Cursor pagination supports only created_at DESC sorting',
     );
@@ -500,7 +502,9 @@ async findAll(
   
 
    // Cursor pagination.
-  if (cursor) {
+  if (paginationMode === 'cursor' || cursor) {
+
+    if(cursor) {
     const decoded = this.decodeCursor(cursor);
 
     queryBuilder.andWhere(
@@ -516,6 +520,7 @@ async findAll(
         id: decoded.id,
       },
     );
+  }
 
     const orders = await queryBuilder
       .orderBy('orders.createdAt', 'DESC')

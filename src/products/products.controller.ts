@@ -13,6 +13,9 @@ import { currentUser } from '../auth/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface.js';
 import { AuditInterceptor } from '../audit/audit/audit.interceptor.js';
 import { AuditEvent } from '../audit/audit/audit.types.js';
+import { RedisCacheService } from '../redis-cache/redis-cache.service.js';
+import { RedisHttpCacheInterceptor } from '../redis-cache/redis-http-cache.interceptor.js';
+import { ResponseMessage } from '../auth/decorators/response-message.decorator.js';
 
 @ApiTags('Products')
 @ApiBearerAuth('JWT-auth')
@@ -21,12 +24,13 @@ export class ProductsController {
     private readonly logger = new Logger(ProductsController.name);
 
     constructor(
-        private readonly productsService : ProductsService
+        private readonly productsService : ProductsService,
+        private readonly redisCache : RedisCacheService
     ){}
 
     @Post('create')
     @Roles(UserRole.Admin)
-    @UseInterceptors(AuditInterceptor)
+    @ResponseMessage('Product Created Successfully')
     @ApiOperation({
         summary: 'Create a product',
         description: 'Only ADMIN users can create products.',
@@ -61,6 +65,8 @@ export class ProductsController {
     createProductDto,
   );
 
+  await this.clearProductsCache()
+
   req.auditEvent = {
     userId: user.id,
     entityType: 'PRODUCT',
@@ -79,7 +85,10 @@ export class ProductsController {
   return product;
     }
 
+    
     @Get()
+    @UseInterceptors(RedisHttpCacheInterceptor)
+    @ResponseMessage('Products fetched Successfully')
     @ApiOperation({
         summary: 'Get products',
         description: 'Get products using pagination, search and sorting.',
@@ -99,10 +108,19 @@ export class ProductsController {
             user.role
             
         );
+
+        
     }
+
+    private async clearProductsCache(): Promise<void> {
+  await this.redisCache.deleteByPattern(
+    'oms:http-cache:*products*',
+  );
+}
 
     @Get('low-stock')
     @Roles(UserRole.Admin)
+    @ResponseMessage('Retrieves the low-stock products')
     @ApiOperation({
         summary: 'Get low-stock products - Admin only',
         description: 'Returns products whose stock is at or below their low-stock threshold. Admin access required.',
@@ -115,6 +133,7 @@ export class ProductsController {
     }
 
     @Get(':id')
+    @ResponseMessage('Product retrieved by ID')
     @ApiOperation({ summary: 'Get product by ID' })
     @ApiParam({ name: 'id', example: 'a0000000-0000-0000-0000-000000000001', description: 'Product UUID' })
     @ApiResponse({ status: 200, description: 'Product found' })
@@ -130,7 +149,7 @@ export class ProductsController {
 
     @Patch(':id')
     @Roles(UserRole.Admin)
-    @UseInterceptors(AuditInterceptor)
+    @ResponseMessage('Updated Product Successfully')
     @ApiOperation({ summary: 'Update a product', description: 'Only ADMIN users can update products.' })
     @ApiParam({ name: 'id', example: 'a0000000-0000-0000-0000-000000000001', description: 'Product UUID' })
     @ApiResponse({ status: 200, description: 'Product updated successfully' })
@@ -155,6 +174,8 @@ export class ProductsController {
         await this.productsService.updateProduct(id, updateproductDto,
             user.id
         );
+
+        await this.clearProductsCache()
 
     // 3. Prepare the audit event.
     req.auditEvent = {
@@ -184,7 +205,7 @@ export class ProductsController {
 
     @Delete(':id')
     @Roles(UserRole.Admin)
-    @UseInterceptors(AuditInterceptor)
+    @ResponseMessage('Deleted Product Successfully')
     @ApiOperation({ summary: 'Delete a product', description: 'Only ADMIN users can delete products.' })
     @ApiParam({ name: 'id', example: 'a0000000-0000-0000-0000-000000000001', description: 'Product UUID' })
     @ApiResponse({ status: 200, description: 'Product deleted successfully' })
@@ -203,6 +224,8 @@ export class ProductsController {
         const product = await this.productsService.getProduct(id);
 
   await this.productsService.removeProduct(id);
+
+  await this.clearProductsCache()
 
   req.auditEvent = {
     userId: user.id,
@@ -234,13 +257,17 @@ export class ProductsController {
 @ApiResponse({ status: 401, description: 'Unauthorized' })
 @ApiResponse({ status: 403, description: 'Only ADMIN can adjust stock' })
 @ApiResponse({ status: 404, description: 'Product not found' })
-    adjustStock(
+ async adjustStock(
         @Param('id', ParseUUIDPipe) id :string,
         @Body() adjustStockDto : AdjustStockDto,
         @currentUser() user : AuthenticatedUser,
     ){
-        return this.productsService.adjustStock(id,adjustStockDto,
+        const result = await this.productsService.adjustStock(id,adjustStockDto,
             user
-        )
+        );
+
+        await this.clearProductsCache();
+
+        return result;
     }
 }

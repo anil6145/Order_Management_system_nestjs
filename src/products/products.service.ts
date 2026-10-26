@@ -47,6 +47,7 @@ export class ProductsService {
         const savedProduct = await this.productsRepositorty.save(product);
 
         this.logger.log(`[SERVICE] ProductsService.createProduct - Product created successfully with ID: ${savedProduct.id}`);
+
         return savedProduct;
     }
 

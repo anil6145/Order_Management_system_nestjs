@@ -103,13 +103,12 @@ export class UsersService {
         qb.select([
             'user.id',
             'user.email',
-            'user.email',
             'user.role',
             'user.status',
-            'user.created_At',
-            'user.updated_At'
+            'user.createdAt',
+            'user.updatedAt'
         ])
-        .orderBy('user.created_At','DESC')
+        .orderBy('user.createdAt','DESC')
         .skip(skip)
         .take(limit)
 

@@ -11,6 +11,7 @@ import {
   IsString,
   Matches,
   Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 import { OrderStatus } from '../enums/order-status.enum.js';
@@ -76,7 +77,7 @@ export class ListOrdersQueryDto {
 
   @IsOptional()
   @IsString()
-  @Max(1024)
+  @MaxLength(1024)
   cursor?: string;
 
   @IsOptional()

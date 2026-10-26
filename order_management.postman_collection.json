@@ -12,11 +12,6 @@
       "type": "string"
     },
     {
-      "key": "accessToken",
-      "value": "",
-      "type": "string"
-    },
-    {
       "key": "adminAccessToken",
       "value": "",
       "type": "string"
@@ -32,12 +27,27 @@
       "type": "string"
     },
     {
+      "key": "userEmail",
+      "value": "customer@example.com",
+      "type": "string"
+    },
+    {
+      "key": "userPassword",
+      "value": "Password123",
+      "type": "string"
+    },
+    {
       "key": "userId",
-      "value": "6d3910aa-7b85-46dc-a404-bde9feaf2b98",
+      "value": "",
       "type": "string"
     },
     {
       "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryName",
       "value": "",
       "type": "string"
     },
@@ -47,7 +57,22 @@
       "type": "string"
     },
     {
+      "key": "productSku",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "deleteProductId",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cancelOrderId",
       "value": "",
       "type": "string"
     },
@@ -116,9 +141,7 @@
                   "    var json = pm.response.json();",
                   "    if (json.data && json.data.access_token) {",
                   "        pm.collectionVariables.set('adminAccessToken', json.data.access_token);",
-                  "        pm.collectionVariables.set('accessToken', json.data.access_token);",
                   "        pm.collectionVariables.set('refreshToken', json.data.refresh_token);",
-                  "        console.log('Saved adminAccessToken & refreshToken');",
                   "    }",
                   "}"
                 ],
@@ -136,7 +159,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@gmail.com\",\n  \"password\": \"your_admin_password\"\n}"
+              "raw": "{\n  \"email\": \"admin@gmail.com\",\n  \"password\": \"Admin@123\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
@@ -163,9 +186,7 @@
                   "    var json = pm.response.json();",
                   "    if (json.data && json.data.access_token) {",
                   "        pm.collectionVariables.set('userAccessToken', json.data.access_token);",
-                  "        pm.collectionVariables.set('accessToken', json.data.access_token);",
                   "        pm.collectionVariables.set('refreshToken', json.data.refresh_token);",
-                  "        console.log('Saved userAccessToken & refreshToken');",
                   "    }",
                   "}"
                 ],
@@ -183,7 +204,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123\"\n}"
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
@@ -210,7 +231,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"wrong@example.com\",\n  \"password\": \"WrongPassword1\"\n}"
+              "raw": "{\n  \"email\": \"unknown@example.com\",\n  \"password\": \"WrongPassword123\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
@@ -262,7 +283,7 @@
                   "if (pm.response.code === 200) {",
                   "    var json = pm.response.json();",
                   "    if (json.data && json.data.access_token) {",
-                  "        pm.collectionVariables.set('accessToken', json.data.access_token);",
+                  "        pm.collectionVariables.set('userAccessToken', json.data.access_token);",
                   "        pm.collectionVariables.set('refreshToken', json.data.refresh_token);",
                   "    }",
                   "}"
@@ -371,6 +392,17 @@
                 ],
                 "type": "text/javascript"
               }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('userEmail') || pm.collectionVariables.get('userEmail') === 'customer@example.com') {",
+                  "    pm.collectionVariables.set('userEmail', 'customer_' + Date.now() + '@example.com');",
+                  "}"
+                ]
+              }
             }
           ],
           "request": {
@@ -383,7 +415,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Customer John\",\n  \"email\": \"customer_1792748940229@example.com\",\n  \"password\": \"Password123\"\n}"
+              "raw": "{\n  \"name\": \"Customer User\",\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/users/register",
@@ -432,7 +464,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               }
             ],
             "url": {
@@ -446,7 +478,23 @@
               ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id && !pm.collectionVariables.get('userId')) {",
+                  "        pm.collectionVariables.set('userId', json.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Profile - Unauthorized (401)",
@@ -501,7 +549,23 @@
               ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.items && json.data.items.length > 0 && !pm.collectionVariables.get('userId')) {",
+                  "        pm.collectionVariables.set('userId', json.data.items[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "List Users - Forbidden for Customer (403)",
@@ -615,7 +679,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               }
             ],
             "url": {
@@ -628,7 +692,24 @@
               ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    var list = Array.isArray(json.data) ? json.data : (json.data && json.data.items ? json.data.items : []);",
+                  "    if (list.length > 0 && !pm.collectionVariables.get('categoryId')) {",
+                  "        pm.collectionVariables.set('categoryId', list[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Create Category (Admin Only)",
@@ -646,6 +727,15 @@
                 ],
                 "type": "text/javascript"
               }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('categoryName', 'Category ' + Date.now());"
+                ]
+              }
             }
           ],
           "request": {
@@ -662,7 +752,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Category 1792748940229\"\n}"
+              "raw": "{\n  \"name\": \"{{categoryName}}\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/categories/create",
@@ -720,7 +810,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               }
             ],
             "url": {
@@ -766,7 +856,24 @@
               ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    var items = json.data && json.data.items ? json.data.items : (Array.isArray(json.data) ? json.data : []);",
+                  "    if (items.length > 0 && !pm.collectionVariables.get('productId')) {",
+                  "        pm.collectionVariables.set('productId', items[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Get Low-Stock Products (Admin Only)",
@@ -808,6 +915,15 @@
                 ],
                 "type": "text/javascript"
               }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('productSku', 'PRD-' + Date.now());"
+                ]
+              }
             }
           ],
           "request": {
@@ -824,7 +940,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sku\": \"PRD-940229\",\n  \"name\": \"Special Premium Biryani\",\n  \"description\": \"Freshly prepared basmati rice and premium tender cuts.\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"price\": \"299.50\",\n  \"stock\": 40,\n  \"lowStockThreshold\": 10,\n  \"status\": \"ACTIVE\"\n}"
+              "raw": "{\n  \"sku\": \"{{productSku}}\",\n  \"name\": \"Special Premium Biryani\",\n  \"description\": \"Freshly prepared basmati rice and premium tender cuts.\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"price\": \"299.50\",\n  \"stock\": 40,\n  \"lowStockThreshold\": 10,\n  \"status\": \"ACTIVE\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/products/create",
@@ -877,7 +993,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               }
             ],
             "url": {
@@ -900,7 +1016,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               }
             ],
             "url": {
@@ -1022,17 +1138,51 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/products/{{productId}}",
+              "raw": "{{baseUrl}}/products/{{deleteProductId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "products",
-                "{{productId}}"
+                "{{deleteProductId}}"
               ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Create a temporary product for soft-delete test so productId remains active for orders",
+                  "pm.sendRequest({",
+                  "    url: pm.collectionVariables.get('baseUrl') + '/products/create',",
+                  "    method: 'POST',",
+                  "    header: {",
+                  "        'Content-Type': 'application/json',",
+                  "        'Authorization': 'Bearer ' + pm.collectionVariables.get('adminAccessToken')",
+                  "    },",
+                  "    body: {",
+                  "        mode: 'raw',",
+                  "        raw: JSON.stringify({",
+                  "            sku: 'DEL-' + Date.now(),",
+                  "            name: 'Temporary Delete Product',",
+                  "            categoryId: pm.collectionVariables.get('categoryId'),",
+                  "            price: '99.00',",
+                  "            stock: 10",
+                  "        })",
+                  "    }",
+                  "}, function (err, res) {",
+                  "    if (!err && res.code === 201) {",
+                  "        var data = res.json().data;",
+                  "        pm.collectionVariables.set('deleteProductId', data.id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1046,7 +1196,6 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
-                  "// Generate fresh idempotency key before request",
                   "pm.collectionVariables.set('idempotencyKey', 'ord-key-' + Date.now());"
                 ],
                 "type": "text/javascript"
@@ -1060,11 +1209,9 @@
                   "    var json = pm.response.json();",
                   "    if (json.data && json.data.id) {",
                   "        pm.collectionVariables.set('orderId', json.data.id);",
-                  "        pm.collectionVariables.set('orderNumber', json.data.order_number);",
                   "        if (json.data.items && json.data.items.length > 0) {",
                   "            pm.collectionVariables.set('orderItemId', json.data.items[0].id);",
                   "        }",
-                  "        console.log('Saved orderId: ' + json.data.id);",
                   "    }",
                   "}"
                 ],
@@ -1077,7 +1224,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               },
               {
                 "key": "Content-Type",
@@ -1113,7 +1260,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               },
               {
                 "key": "Content-Type",
@@ -1144,7 +1291,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               },
               {
                 "key": "Content-Type",
@@ -1180,7 +1327,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               },
               {
                 "key": "Content-Type",
@@ -1215,7 +1362,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               }
             ],
             "url": {
@@ -1302,7 +1449,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               }
             ],
             "url": {
@@ -1325,7 +1472,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               }
             ],
             "url": {
@@ -1349,7 +1496,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               },
               {
                 "key": "Content-Type",
@@ -1444,7 +1591,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
+                "value": "Bearer {{userAccessToken}}"
               },
               {
                 "key": "Content-Type",
@@ -1456,18 +1603,51 @@
               "raw": "{\n  \"status\": \"CANCELLED\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/orders/{{orderId}}/status",
+              "raw": "{{baseUrl}}/orders/{{cancelOrderId}}/status",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "orders",
-                "{{orderId}}",
+                "{{cancelOrderId}}",
                 "status"
               ]
-            }
+            },
+            "description": "Cancels a PENDING order as the order owner (or admin) and restores inventory stock."
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Create a dedicated pending order for cancellation test to respect status transitions",
+                  "pm.sendRequest({",
+                  "    url: pm.collectionVariables.get('baseUrl') + '/orders/create',",
+                  "    method: 'POST',",
+                  "    header: {",
+                  "        'Content-Type': 'application/json',",
+                  "        'Authorization': 'Bearer ' + pm.collectionVariables.get('userAccessToken'),",
+                  "        'idempotency-key': 'cancel-test-' + Date.now()",
+                  "    },",
+                  "    body: {",
+                  "        mode: 'raw',",
+                  "        raw: JSON.stringify({",
+                  "            items: [{ productId: pm.collectionVariables.get('productId'), quantity: 1 }],",
+                  "            notes: 'Order for cancellation test'",
+                  "        })",
+                  "    }",
+                  "}, function (err, res) {",
+                  "    if (!err && (res.code === 201 || res.code === 200)) {",
+                  "        var data = res.json().data;",
+                  "        pm.collectionVariables.set('cancelOrderId', data.id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Status - Invalid Transition (422)",
@@ -1497,7 +1677,8 @@
                 "{{orderId}}",
                 "status"
               ]
-            }
+            },
+            "description": "Verifies that invalid transitions on COMPLETED orders are rejected with 422 Unprocessable Entity."
           },
           "response": []
         }

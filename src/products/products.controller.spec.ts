@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsController } from './products.controller.js';
 import { ProductsService } from './products.service.js';
 import { AuditService } from '../audit/audit/audit-queue.service.js';
+import { RedisCacheService } from '../redis-cache/redis-cache.service.js';
 
 describe('ProductsController', () => {
   let controller: ProductsController;
@@ -25,6 +26,11 @@ describe('ProductsController', () => {
           provide: AuditService,
           useValue: {},
         },
+        {
+    provide: RedisCacheService,
+    useValue: {},
+  },
+
       ],
     }).compile();
 
