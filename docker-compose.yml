@@ -1,0 +1,19 @@
+
+services:
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    ports:
+      - "${PGBOUNCER_HOST_PORT:-6432}:5432"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      DB_HOST: host.docker.internal
+      DB_PORT: "5432"
+      DB_USER: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      POOL_MODE: transaction 
+      AUTH_TYPE: scram-sha-256
+      MAX_CLIENT_CONN: "100"
+      DEFAULT_POOL_SIZE: "${PGBOUNCER_POOL_SIZE:-20}"
+      IGNORE_STARTUP_PARAMETERS: "extra_float_digits,statement_timeout"
