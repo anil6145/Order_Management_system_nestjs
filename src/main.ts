@@ -24,12 +24,6 @@ async function bootstrap() {
   )
 
 
-  // global response interceptor
-  // makes successful API responses follow one common structure
-  app.useGlobalInterceptors(
-    new ResponseInterceptor(),
-  )
-
   // Global Exception Filter
   // handles exceptions in one cental place so error responses also follow a consistent structure 
   app.useGlobalFilters(

@@ -6,6 +6,7 @@ import { UserRole } from '../users/enum/roles.enum.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { TopProductsQueryDto } from './dto/top-products-query.dto.js';
 import type { Response } from 'express';
+import { ResponseMessage } from '../auth/decorators/response-message.decorator.js';
 
 @ApiTags('Reports')
 @ApiBearerAuth('JWT-auth')
@@ -17,6 +18,7 @@ export class ReportsController {
   ) {}
 
   @Get('sales-summary')
+  @ResponseMessage('Sales-summary fetched successfully')
   @ApiOperation({
     summary: 'Get aggregated sales summary - Admin only',
     description:
@@ -42,7 +44,6 @@ export class ReportsController {
   }
 
   @Get('sales-summary/export')
-  @Roles(UserRole.Admin)
   @ApiOperation({
     summary: 'Export sales summary as CSV - Admin only',
     description:
@@ -82,6 +83,7 @@ export class ReportsController {
   }
 
   @Get('top-products')
+  @ResponseMessage('Top-products feteched successfully')
   @ApiOperation({
     summary: 'Get top selling products - Admin only',
     description:
@@ -114,6 +116,7 @@ export class ReportsController {
   }
 
   @Get('low-stock')
+  @ResponseMessage('Low-stock fetched successfully')
   @ApiOperation({
     summary: 'Get low stock products report - Admin only',
     description:

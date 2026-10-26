@@ -32,10 +32,6 @@ export class RedisHttpCacheInterceptor
     const cached = await this.cache.get<unknown>(key);
 
     if (cached !== null) {
-      return of(cached);
-    }
-
-    if (cached !== null) {
   console.log(`[CACHE HIT] ${key}`);
   return of(cached);
 }

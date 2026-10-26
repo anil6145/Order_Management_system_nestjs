@@ -15,6 +15,7 @@ import { AuditInterceptor } from '../audit/audit/audit.interceptor.js';
 import { AuditEvent } from '../audit/audit/audit.types.js';
 import { RedisCacheService } from '../redis-cache/redis-cache.service.js';
 import { RedisHttpCacheInterceptor } from '../redis-cache/redis-http-cache.interceptor.js';
+import { ResponseMessage } from '../auth/decorators/response-message.decorator.js';
 
 @ApiTags('Products')
 @ApiBearerAuth('JWT-auth')
@@ -29,7 +30,7 @@ export class ProductsController {
 
     @Post('create')
     @Roles(UserRole.Admin)
-    @UseInterceptors(AuditInterceptor)
+    @ResponseMessage('Product Created Successfully')
     @ApiOperation({
         summary: 'Create a product',
         description: 'Only ADMIN users can create products.',
@@ -84,8 +85,10 @@ export class ProductsController {
   return product;
     }
 
-    @UseInterceptors(RedisHttpCacheInterceptor)
+    
     @Get()
+    @UseInterceptors(RedisHttpCacheInterceptor)
+    @ResponseMessage('Products fetched Successfully')
     @ApiOperation({
         summary: 'Get products',
         description: 'Get products using pagination, search and sorting.',
@@ -117,6 +120,7 @@ export class ProductsController {
 
     @Get('low-stock')
     @Roles(UserRole.Admin)
+    @ResponseMessage('Retrieves the low-stock products')
     @ApiOperation({
         summary: 'Get low-stock products - Admin only',
         description: 'Returns products whose stock is at or below their low-stock threshold. Admin access required.',
@@ -129,6 +133,7 @@ export class ProductsController {
     }
 
     @Get(':id')
+    @ResponseMessage('Product retrieved by ID')
     @ApiOperation({ summary: 'Get product by ID' })
     @ApiParam({ name: 'id', example: 'a0000000-0000-0000-0000-000000000001', description: 'Product UUID' })
     @ApiResponse({ status: 200, description: 'Product found' })
@@ -144,7 +149,7 @@ export class ProductsController {
 
     @Patch(':id')
     @Roles(UserRole.Admin)
-    @UseInterceptors(AuditInterceptor)
+    @ResponseMessage('Updated Product Successfully')
     @ApiOperation({ summary: 'Update a product', description: 'Only ADMIN users can update products.' })
     @ApiParam({ name: 'id', example: 'a0000000-0000-0000-0000-000000000001', description: 'Product UUID' })
     @ApiResponse({ status: 200, description: 'Product updated successfully' })
@@ -200,7 +205,7 @@ export class ProductsController {
 
     @Delete(':id')
     @Roles(UserRole.Admin)
-    @UseInterceptors(AuditInterceptor)
+    @ResponseMessage('Deleted Product Successfully')
     @ApiOperation({ summary: 'Delete a product', description: 'Only ADMIN users can delete products.' })
     @ApiParam({ name: 'id', example: 'a0000000-0000-0000-0000-000000000001', description: 'Product UUID' })
     @ApiResponse({ status: 200, description: 'Product deleted successfully' })

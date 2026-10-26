@@ -30,6 +30,7 @@ import { OrderQueryDto } from './dto/order-query.dto.js';
 import { ListOrdersQueryDto } from './dto/list-orders-query.dto.js';
 import { AuditInterceptor } from '../audit/audit/audit.interceptor.js';
 import { AuditEvent } from '../audit/audit/audit.types.js';
+import { ResponseMessage } from '../auth/decorators/response-message.decorator.js';
 
 
 
@@ -48,6 +49,7 @@ export class OrdersController {
 
   @Post('create')
   @Roles(UserRole.User,UserRole.Admin)
+  @ResponseMessage('Order Created Successfully')
   @ApiOperation({
     summary: 'Create a new order (Authenticated User)',
     description:
@@ -111,6 +113,7 @@ return order;
   }
 
   @Get()
+  @ResponseMessage('Orders fetched successfully')
   @ApiOperation({
     summary: 'Get orders with pagination and filtering',
     description:
@@ -180,7 +183,6 @@ return order;
   }
 
   @Patch(':id/status')
-  @UseInterceptors(AuditInterceptor)
   @ApiOperation({
     summary: 'Update order status',
     description:

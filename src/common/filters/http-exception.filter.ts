@@ -3,6 +3,7 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  HttpStatus,
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
@@ -20,36 +21,80 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const status = exception.getStatus();
     const exceptionResponse = exception.getResponse();
 
-    let message = 'Request failed';
-
-    if (typeof exceptionResponse === 'string') {
-      message = exceptionResponse;
-    } else if (
+    const body =
       typeof exceptionResponse === 'object' &&
       exceptionResponse !== null
-    ) {
-      const responseMessage = (exceptionResponse as {
-        message?: string | string[];
-      }).message;
+        ? exceptionResponse as Record<string, unknown>
+        : {};
 
-      if (Array.isArray(responseMessage)) {
-        message = responseMessage.join(', ');
-      } else if (responseMessage) {
-        message = responseMessage;
-      }
-    }
+    const rawMessage = body.message ??
+      (typeof exceptionResponse === 'string'
+        ? exceptionResponse
+        : 'Request failed');
+
+    const messages = Array.isArray(rawMessage)
+      ? rawMessage.map(String)
+      : [String(rawMessage)];
+
+    const isValidationError =
+      status === HttpStatus.BAD_REQUEST &&
+      Array.isArray(rawMessage);
+
+    const errors = isValidationError
+      ? messages.map((message) => {
+          // Supports Nest's standard "property must ..." messages.
+          const match = message.match(/^(.+?) must (.+)$/);
+
+          if (!match) {
+            return { field: '', message };
+          }
+
+          const field = match[1].replace(
+            /\.(\d+)(?=\.|$)/g,
+            '[$1]',
+          );
+
+          return {
+            field,
+            message: `must ${match[2]}`,
+          };
+        })
+      : null;
+
+    const errorCode =
+      typeof body.errorCode === 'string'
+        ? body.errorCode
+        : isValidationError
+          ? 'VALIDATION_ERROR'
+          : status === HttpStatus.BAD_REQUEST
+            ? 'BAD_REQUEST'
+            : status === HttpStatus.UNAUTHORIZED
+              ? 'UNAUTHORIZED'
+              : status === HttpStatus.FORBIDDEN
+                ? 'FORBIDDEN'
+                : status === HttpStatus.NOT_FOUND
+                  ? 'NOT_FOUND'
+                  : status === HttpStatus.CONFLICT
+                    ? 'CONFLICT'
+                    : status >= 500
+                      ? 'INTERNAL_SERVER_ERROR'
+                      : 'REQUEST_FAILED';
+
+    const message = isValidationError
+      ? 'Validation failed'
+      : messages[0];
 
     this.logger.error(
-      `[EXCEPTION FILTER] - Exception caught: ${exception.constructor.name} (Status: ${status}) | Path: ${request.method} ${request.originalUrl} | Message: ${message}`,
-    );
-
-    this.logger.log(
-      `[RESPONSE] Status ${status} for ${request.method} ${request.originalUrl}`,
+      `[EXCEPTION FILTER] ${exception.constructor.name} | ` +
+      `Status: ${status} | Path: ${request.method} ${request.originalUrl} | ` +
+      `Message: ${message}`,
     );
 
     response.status(status).json({
       success: false,
       message,
+      errorCode,
+      errors,
       data: null,
     });
   }
